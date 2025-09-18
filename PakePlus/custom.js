@@ -29,3 +29,49 @@ window.open = function (url, target, features) {
 }
 
 document.addEventListener('click', hookClick, { capture: true })
+
+// 获取摄像头权限
+async function initCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: 'environment'  // 使用后置摄像头
+      } 
+    });
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.play();
+    document.body.appendChild(video);
+    
+    return { stream, video };
+  } catch (err) {
+    console.error('摄像头访问失败:', err);
+    throw err;
+  }
+}
+
+// 拍照功能
+async function takePhoto() {
+  const { stream, video } = await initCamera();
+  
+  // 创建canvas元素
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  
+  // 绘制图像
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  // 停止视频流
+  stream.getTracks().forEach(track => track.stop());
+  
+  // 返回base64格式图片
+  return canvas.toDataURL('image/jpeg');
+}
+
+// 调用示例
+takePhoto().then(photoData => {
+  console.log('照片数据:', photoData);
+  // 这里可以添加保存或上传逻辑
+});
